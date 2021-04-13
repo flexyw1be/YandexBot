@@ -3,6 +3,8 @@ from data import db_session
 from discord.ext import commands
 import random
 from discord.utils import get
+from discord.voice_client import VoiceClient
+import asyncio
 
 bot = commands.Bot(command_prefix='.')
 
