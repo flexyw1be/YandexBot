@@ -32,23 +32,43 @@ class COM(commands.Cog):
 
     @commands.command()
     async def join(self, ctx):
-        global voice
-        channel = ctx.message.author.voice.channel
-        await bot.join_voice_channel(channel)
+        channel = ctx.author.voice.channel
+        await channel.connect()
 
-    # @commands.command()
-    # @commands.has_permissions(administrator=True)
-    # async def kick(self):  Код для кика участиков сервера
+    @commands.command()
+    async def leave(self, ctx):
+        await ctx.voice_client.disconnect()
 
-    # @commands.command()
-    # @commands.has_permissions(administrator=True)
-    # async def ban(self):  Код для бана участиков сервера
+
+# @commands.command()
+# @commands.has_permissions(administrator=True)
+# async def kick(self):  Код для кика участиков сервера
+
+# @commands.command()
+# @commands.has_permissions(administrator=True)
+# async def ban(self):  Код для бана участиков сервера
 
 
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.online,
-                              activity=discord.Game(name='Real Life', type=3))  # Пишете ваш статус вместо
+                              activity=discord.Game(name='Real Life', type=3))  # статус
+
+
+@bot.event
+async def on_message(message):
+    await bot.process_commands(message)
+    txt = message.content.lower()
+    if 'привет' in txt:
+        await message.channel.send('Ку')
+
+
+@bot.event
+async def on_member_join(member):
+    await member.create_dm()
+    await member.dm_channel.send(
+        f'Привет, {member.name}!'
+    )
 
 
 def main():
