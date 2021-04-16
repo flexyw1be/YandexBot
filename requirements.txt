@@ -1,2 +1,4 @@
 discord.py
-python
+python 3.8
+discord~=1.0.1
+SQLAlchemy~=1.4.7
