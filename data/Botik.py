@@ -5,6 +5,7 @@ import os
 from asyncio import sleep
 
 import sqlalchemy
+from discord.utils import get
 
 from data import db_session
 from data.member import Member
@@ -59,21 +60,64 @@ class COM(commands.Cog):
                 Причина: {reason}""", color=0x969696))
 
     @commands.command()
-    async def join(self, ctx, url: str):
+    async def join(self, ctx):
         global vc
         channel = ctx.message.author.voice.channel
         await ctx.channel.purge(limit=1)
         if channel:
             vc = await channel.connect()
 
-    # @commands.command()
-    # async def play(self, ctx, url: str):
-    #     global vc
-    #     song = os.path.isfile('song.mp3')
-    #     channel = ctx.message.author.voice.channel
-    #     await ctx.channel.purge(limit=1)
-    #     if channel:
-    #         vc = await channel.connect()
+    @commands.command()
+    async def pause(self, ctx):
+        global vc
+        await ctx.channel.purge(limit=1)
+        if vc.is_playing:
+            vc.pause()
+        else:
+            await ctx.send("Currently no audio is playing.")
+
+    @commands.command()
+    async def play(self, ctx, url: str):
+        song_there = os.path.isfile("song.mp3")
+        try:
+            if song_there:
+                os.remove("song.mp3")
+                print("Removed old song file")
+        except PermissionError:
+            print("Trying to delete song file, but it's being played")
+            await ctx.send("ERROR: Music playing")
+            return
+
+        await ctx.send("Getting everything ready now")
+
+        voice = get(bot.voice_clients, guild=ctx.guild)
+
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+        }
+
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            print("Downloading audio now\n")
+            ydl.download(['https://www.youtube.com/watch?v=w43f02iMuZo&t=100s'])
+
+        for file in os.listdir("./"):
+            if file.endswith(".mp3"):
+                name = file
+                print(f"Renamed File: {file}\n")
+                os.rename(file, "song.mp3")
+
+        voice.play(discord.FFmpegPCMAudio("song.mp3"), after=lambda e: print("Song done!"))
+        voice.source = discord.PCMVolumeTransformer(voice.source)
+        voice.source.volume = 0.07
+
+        nname = name.rsplit("-", 2)
+        await ctx.send(f"Playing: {nname[0]}")
+        print("playing\n")
 
     @commands.command()
     async def leave(self, ctx):
