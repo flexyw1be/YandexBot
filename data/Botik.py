@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from youtube_dl import YoutubeDL
+import youtube_dl
+import os
 from asyncio import sleep
 
 import sqlalchemy
@@ -44,33 +45,35 @@ class COM(commands.Cog):
     async def kick(self, ctx, user: discord.Member, *, reason=None):
         await user.kick(reason=reason)
         await ctx.channel.purge(limit=1)
-        form = (f'Кикнут: {user.mention} \n',
-                f'Кикнулл: {ctx.author.mention} \n',
-                f'Причина: {reason}')
-        await ctx.send(embed=discord.Embed(title='Исключение', description=form, color='ff0033'))
+        await ctx.send(embed=discord.Embed(title='Исключение', description=f"""Кикнут: {user.mention} \n
+                Кикнулл: {ctx.author.mention} \n
+                Причина: {reason}""", color=0x969696))
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, user: discord.Member, *, reason=None):
         await ctx.channel.purge(limit=1)
         await user.ban(reason=reason)
-        form = (f'Забанен: {user.mention} \n',
-                f'Забанил: {ctx.author.mention} \n',
-                f'Причина: {reason}')
-        await ctx.send(embed=discord.Embed(title='Бан', description=form, color='ff0033'))
+        await ctx.send(embed=discord.Embed(title='Бан', description=f"""Забанен: {user.mention} \n
+                Забанил: {ctx.author.mention} \n
+                Причина: {reason}""", color=0x969696))
 
     @commands.command()
-    async def join(self, ctx):
+    async def join(self, ctx, url: str):
         global vc
         channel = ctx.message.author.voice.channel
         await ctx.channel.purge(limit=1)
         if channel:
             vc = await channel.connect()
 
-    @commands.command()
-    async def play(self, url):
-        player = await vc.create_ytdl_player(url)
-        player.start()
+    # @commands.command()
+    # async def play(self, ctx, url: str):
+    #     global vc
+    #     song = os.path.isfile('song.mp3')
+    #     channel = ctx.message.author.voice.channel
+    #     await ctx.channel.purge(limit=1)
+    #     if channel:
+    #         vc = await channel.connect()
 
     @commands.command()
     async def leave(self, ctx):
@@ -85,14 +88,10 @@ async def on_ready():
                               activity=discord.Game(name='Real Life', type=3))  # статус
 
 
-# @bot.event
-# async def on_member_join(member):
-#     await member.send("Welcome!")
-#     mb = Member()
-#     mb.name = member
-#     db_sess = db_session.create_session()
-#     db_sess.add(mb)
-#     db_sess.commit()
+@bot.event
+async def on_member_join(member):
+    channel = bot.get_channel(832632474017464340)
+    await channel.send(emb=discord.Embed(description=f'Пользователь {member.name}, присоединился к нам!'))
 
 
 @bot.event
