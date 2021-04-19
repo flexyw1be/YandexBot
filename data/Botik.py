@@ -1,8 +1,11 @@
+import json
+
 import discord
 from discord.ext import commands
 import youtube_dl
 import os
 from sqlalchemy import orm
+import requests
 
 from asyncio import sleep
 
@@ -37,43 +40,55 @@ class COM(commands.Cog):
         await ctx.channel.purge(limit=amount)
 
     @commands.command()
-    async def leave(self, ctx):
-        await ctx.voice_client.disconnect()
-
-    @commands.command()
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member, *, reason=None):
-        await user.kick(reason=reason)
         await ctx.channel.purge(limit=1)
-        await ctx.send(embed=discord.Embed(title='Исключение', description=f"""Кикнут: {user.mention} \n
+        try:
+            await user.kick(reason=reason)
+            await ctx.send(embed=discord.Embed(title='Исключение', description=f"""Кикнут: {user.mention} \n
                 Кикнулл: {ctx.author.mention} \n
                 Причина: {reason}""", color=0x969696))
+        except Exception:
+            return
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, user: discord.Member, *, reason=None):
         await ctx.channel.purge(limit=1)
-        await user.ban(reason=reason)
-        await ctx.send(embed=discord.Embed(title='Бан', description=f"""Забанен: {user.mention} \n
+        try:
+            await user.ban(reason=reason)
+            await ctx.send(embed=discord.Embed(title='Бан', description=f"""Забанен: {user.mention} \n
                 Забанил: {ctx.author.mention} \n
                 Причина: {reason}""", color=0x969696))
+        except Exception:
+            return
 
     @commands.command()
     async def join(self, ctx):
         global vc
-        channel = ctx.message.author.voice.channel
         await ctx.channel.purge(limit=1)
-        if channel:
-            vc = await channel.connect()
+        try:
+            channel = ctx.message.author.voice.channel
+            if channel:
+                vc = await channel.connect()
+        except Exception:
+            return
 
     @commands.command()
     async def pause(self, ctx):
         global vc
         await ctx.channel.purge(limit=1)
-        if vc.is_playing:
-            vc.pause()
-        else:
-            await ctx.send("Currently no audio is playing.")
+        try:
+            if vc.is_playing:
+                vc.pause()
+            else:
+                await ctx.send("Currently no audio is playing.")
+        except Exception:
+            return
+
+    @commands.command()
+    async def youtube(self, ctx, *, search):
+        req = requests.get(search)
 
     @commands.command()
     async def play(self, ctx, url: str):
@@ -121,9 +136,12 @@ class COM(commands.Cog):
 
     @commands.command()
     async def leave(self, ctx):
-        server = ctx.message.guild.voice_client
-        await server.disconnect()
         await ctx.channel.purge(limit=1)
+        try:
+            server = ctx.message.guild.voice_client
+            await server.disconnect()
+        except Exception:
+            return
 
 
 @bot.event
@@ -149,8 +167,8 @@ async def on_message(message):
 def main():
     token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.Q7cIJvLoL44m3OK8drZ4Xqu5ajE'
     bot.add_cog(COM(bot))
-    db_sess = db_session.create_session()
-    db_session.global_init("db/blogs.db.sqlite")
+    # db_sess = db_session.create_session()
+    # db_session.global_init("db/blogs.db.sqlite")
     bot.run(token)
 
 
