@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import youtube_dl
 import os
+from sqlalchemy import orm
+
 from asyncio import sleep
 
 import sqlalchemy
@@ -14,9 +16,6 @@ YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'False'}
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
 bot = commands.Bot(command_prefix='.')
-
-
-# db_session.global_init("db/blogs.db.sqlite")
 
 
 class COM(commands.Cog):
@@ -99,19 +98,20 @@ class COM(commands.Cog):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
+            'outtmpl': '%(title)s.%(etx)s',
+            'quiet': False
         }
-
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             print("Downloading audio now\n")
-            ydl.download(['https://www.youtube.com/watch?v=w43f02iMuZo&t=100s'])
+            ydl.download([url])
 
         for file in os.listdir("./"):
             if file.endswith(".mp3"):
                 name = file
                 print(f"Renamed File: {file}\n")
                 os.rename(file, "song.mp3")
-
-        voice.play(discord.FFmpegPCMAudio("song.mp3"), after=lambda e: print("Song done!"))
+        audio = discord.FFmpegPCMAudio("song.mp3")
+        voice.play(audio, after=None)
         voice.source = discord.PCMVolumeTransformer(voice.source)
         voice.source.volume = 0.07
 
@@ -149,6 +149,8 @@ async def on_message(message):
 def main():
     token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.Q7cIJvLoL44m3OK8drZ4Xqu5ajE'
     bot.add_cog(COM(bot))
+    db_sess = db_session.create_session()
+    db_session.global_init("db/blogs.db.sqlite")
     bot.run(token)
 
 
