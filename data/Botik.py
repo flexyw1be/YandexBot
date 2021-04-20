@@ -1,19 +1,9 @@
-import json
-
 import discord
 from discord.ext import commands
 import youtube_dl
 import os
-from sqlalchemy import orm
-import requests
 
-from asyncio import sleep
-
-import sqlalchemy
 from discord.utils import get
-
-from data import db_session
-from data.member import Member
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'False'}
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
@@ -26,7 +16,7 @@ class COM(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='work')
+    @commands.command(name='work')  # команда для отладки(готово)
     @commands.has_permissions(administrator=True)
     async def work(self, ctx):
         await ctx.send('Бот работает!')
@@ -35,13 +25,13 @@ class COM(commands.Cog):
     async def Hi(self, ctx):
         await ctx.send('Hi')
 
-    @commands.command(name='clear')
+    @commands.command(name='clear')  # очистка чата(готово)
     async def clear(self, ctx, amount=20):
         await ctx.channel.purge(limit=amount)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def kick(self, ctx, user: discord.Member, *, reason=None):
+    async def kick(self, ctx, user: discord.Member, *, reason=None):  # исключение(готово)
         await ctx.channel.purge(limit=1)
         try:
             await user.kick(reason=reason)
@@ -53,7 +43,7 @@ class COM(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
-    async def ban(self, ctx, user: discord.Member, *, reason=None):
+    async def ban(self, ctx, user: discord.Member, *, reason=None):  # бан(готово)
         await ctx.channel.purge(limit=1)
         try:
             await user.ban(reason=reason)
@@ -64,7 +54,7 @@ class COM(commands.Cog):
             return
 
     @commands.command()
-    async def join(self, ctx):
+    async def join(self, ctx):  # прсоединение к войс чату(готово)
         global vc
         await ctx.channel.purge(limit=1)
         try:
@@ -75,7 +65,7 @@ class COM(commands.Cog):
             return
 
     @commands.command()
-    async def pause(self, ctx):
+    async def pause(self, ctx):  # пауза войс чата(готово)
         global vc
         await ctx.channel.purge(limit=1)
         try:
@@ -87,11 +77,20 @@ class COM(commands.Cog):
             return
 
     @commands.command()
-    async def youtube(self, ctx, *, search):
-        req = requests.get(search)
+    async def resume(self, ctx):  # пауза войс чата(готово)
+        global vc
+        await ctx.channel.purge(limit=1)
+        try:
+            vc.resume()
+        except Exception:
+            return
+
+    # @commands.command()
+    # async def youtube(self, ctx, *, search):  # поиск видео на youtube(не готово)
+    #     req = requests.get(search)
 
     @commands.command()
-    async def play(self, ctx, url: str):
+    async def play(self, ctx, url: str):  # проигрывание музыки(готово)
         song_there = os.path.isfile("song.mp3")
         try:
             if song_there:
@@ -125,17 +124,11 @@ class COM(commands.Cog):
                 name = file
                 print(f"Renamed File: {file}\n")
                 os.rename(file, "song.mp3")
-        audio = discord.FFmpegPCMAudio("song.mp3")
-        voice.play(audio, after=None)
-        voice.source = discord.PCMVolumeTransformer(voice.source)
-        voice.source.volume = 0.07
-
-        nname = name.rsplit("-", 2)
-        await ctx.send(f"Playing: {nname[0]}")
-        print("playing\n")
+        sound = discord.FFmpegPCMAudio("song.mp3")
+        voice.play(sound)
 
     @commands.command()
-    async def leave(self, ctx):
+    async def leave(self, ctx):  # отсоединение от войс чата(готово)
         await ctx.channel.purge(limit=1)
         try:
             server = ctx.message.guild.voice_client
@@ -147,7 +140,7 @@ class COM(commands.Cog):
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.online,
-                              activity=discord.Game(name='Real Life', type=3))  # статус
+                              activity=discord.Game(name='Real Life', type=3))  # статус в Discord
 
 
 @bot.event
@@ -165,10 +158,8 @@ async def on_message(message):
 
 
 def main():
-    token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.Q7cIJvLoL44m3OK8drZ4Xqu5ajE'
+    token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.WK8OKBV2LhF-wvosMU1u8oaqq2g'
     bot.add_cog(COM(bot))
-    # db_sess = db_session.create_session()
-    # db_session.global_init("db/blogs.db.sqlite")
     bot.run(token)
 
 
