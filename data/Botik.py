@@ -1,4 +1,5 @@
 import discord
+import requests
 from discord.ext import commands
 import youtube_dl
 import os
@@ -15,6 +16,7 @@ class COM(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.song_data = []
 
     @commands.command(name='work')  # команда для отладки(готово)
     @commands.has_permissions(administrator=True)
@@ -85,12 +87,27 @@ class COM(commands.Cog):
         except Exception:
             return
 
-    # @commands.command()
-    # async def youtube(self, ctx, *, search):  # поиск видео на youtube(не готово)
-    #     req = requests.get(search)
+    @commands.command()
+    async def youtube(self, ctx, *, search):  # поиск видео на youtube(готово)
+        API_KEY = 'AIzaSyCrbB2zI6dpRZTdNqWpbzDwVUP0Jyjz0tU'
+        print(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='
+              f'{"%20".join(search.split())}&type=video&key={API_KEY}')
+        req = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='
+                           f'{"%20".join(search.split())}&type=video&key={API_KEY}')
+        req = req.json()
+        id = f"https://www.youtube.com/watch?v={req['items'][0]['id']['videoId']}"
+        await ctx.send(id)
+        await self.play(ctx, id)
 
     @commands.command()
-    async def play(self, ctx, url: str):  # проигрывание музыки(готово)
+    async def play(self, ctx, *, search):  # проигрывание музыки(готово)
+        API_KEY = 'AIzaSyCrbB2zI6dpRZTdNqWpbzDwVUP0Jyjz0tU'
+        print(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='
+              f'{"%20".join(search.split())}&type=video&key={API_KEY}')
+        req = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='
+                           f'{"%20".join(search.split())}&type=video&key={API_KEY}')
+        req = req.json()
+        url = f"https://www.youtube.com/watch?v={req['items'][0]['id']['videoId']}"
         song_there = os.path.isfile("song.mp3")
         try:
             if song_there:
@@ -98,10 +115,10 @@ class COM(commands.Cog):
                 print("Removed old song file")
         except PermissionError:
             print("Trying to delete song file, but it's being played")
-            await ctx.send("ERROR: Music playing")
+            await ctx.send(embed=discord.Embed(title='ERROR', description="ERROR: Music playing", color=0x969696))
             return
 
-        await ctx.send("Getting everything ready now")
+        await ctx.send(embed=discord.Embed(description="Getting everything ready now", color=0x969696))
 
         voice = get(bot.voice_clients, guild=ctx.guild)
 
@@ -118,14 +135,26 @@ class COM(commands.Cog):
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             print("Downloading audio now\n")
             ydl.download([url])
-
+        f = ''
         for file in os.listdir("./"):
             if file.endswith(".mp3"):
                 name = file
                 print(f"Renamed File: {file}\n")
                 os.rename(file, "song.mp3")
-        sound = discord.FFmpegPCMAudio("song.mp3")
+        sound = discord.FFmpegPCMAudio('song.mp3')
         voice.play(sound)
+        await ctx.channel.purge(limit=2)
+        await ctx.send(embed=discord.Embed(title='Music', description=f'Now playing: {name}', color=0x969696))
+        await ctx.send(url)
+
+    @commands.command()
+    async def stop(self, ctx):  # стоп войс чата(готово)
+        global vc
+        await ctx.channel.purge(limit=1)
+        try:
+            vc.stop()
+        except Exception:
+            return
 
     @commands.command()
     async def leave(self, ctx):  # отсоединение от войс чата(готово)
@@ -158,7 +187,7 @@ async def on_message(message):
 
 
 def main():
-    token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.WK8OKBV2LhF-wvosMU1u8oaqq2g'
+    token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.uZFV89itL8lzctSHkyEBtoewprM'
     bot.add_cog(COM(bot))
     bot.run(token)
 
