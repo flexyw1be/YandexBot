@@ -57,22 +57,21 @@ class COM(commands.Cog):
 
     @commands.command()
     async def join(self, ctx):  # прсоединение к войс чату(готово)
-        global vc
         await ctx.channel.purge(limit=1)
         try:
             channel = ctx.message.author.voice.channel
             if channel:
-                vc = await channel.connect()
+                self.vc = await channel.connect()
         except Exception:
             return
 
     @commands.command()
     async def pause(self, ctx):  # пауза войс чата(готово)
-        global vc
         await ctx.channel.purge(limit=1)
         try:
-            if vc.is_playing:
-                vc.pause()
+            if self.vc.is_playing:
+                self.vc.pause()
+                await ctx.send(embed=discord.Embed(title='Pause', description=f'write <<.resume>>', color=0x969696))
             else:
                 await ctx.send("Currently no audio is playing.")
         except Exception:
@@ -80,14 +79,12 @@ class COM(commands.Cog):
 
     @commands.command()
     async def resume(self, ctx):  # пауза войс чата(готово)
-        global vc
         await ctx.channel.purge(limit=1)
         try:
-            vc.resume()
+            self.vc.resume()
         except Exception:
             return
 
-    @commands.command()
     async def youtube(self, ctx, *, search):  # поиск видео на youtube(готово)
         API_KEY = 'AIzaSyCrbB2zI6dpRZTdNqWpbzDwVUP0Jyjz0tU'
         print(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='
@@ -135,7 +132,6 @@ class COM(commands.Cog):
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             print("Downloading audio now\n")
             ydl.download([url])
-        f = ''
         for file in os.listdir("./"):
             if file.endswith(".mp3"):
                 name = file
@@ -149,10 +145,9 @@ class COM(commands.Cog):
 
     @commands.command()
     async def stop(self, ctx):  # стоп войс чата(готово)
-        global vc
         await ctx.channel.purge(limit=1)
         try:
-            vc.stop()
+            self.vc.stop()
         except Exception:
             return
 
@@ -187,7 +182,7 @@ async def on_message(message):
 
 
 def main():
-    token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.uZFV89itL8lzctSHkyEBtoewprM'
+    token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.EfK7NNTzRuo0dKg5Ey36Hbh4w8g'
     bot.add_cog(COM(bot))
     bot.run(token)
 
