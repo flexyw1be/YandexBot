@@ -4,3 +4,4 @@ peewee==3.14.4
 youtube_dl==2021.4.7
 discord[voice]
 PyNaCl==1.4.0
+ffmpeg

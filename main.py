@@ -179,7 +179,7 @@ class COM(commands.Cog):
             await server.disconnect()
         except Exception:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'), color=15158332)
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате', color=15158332))
             return
 
     @commands.command()
