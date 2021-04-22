@@ -74,7 +74,8 @@ class COM(commands.Cog):
         try:
             channel = ctx.message.author.voice.channel
             self.vc = await channel.connect()
-        except Exception:
+        except Exception as e:
+            print(e)
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
             f'{ctx.message.author.mention}, Вы не в голосовом чате', color=15158332))
             return
