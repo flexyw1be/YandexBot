@@ -249,10 +249,9 @@ async def on_message(message):
 
 def main():
     with open('Token.txt', 'rt') as f:
-        token = f.read().split('|')
-        print(token[1])
+        token = ''.join(f.read().split('|'))
     bot.add_cog(COM(bot))
-    bot.run(token[1])
+    bot.run(token)
 
 
 if __name__ == "__main__":
