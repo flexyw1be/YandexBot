@@ -249,7 +249,7 @@ async def on_message(message):
 
 def main():
     with open('Token.txt', 'rt') as f:
-        token = f.read()
+        token = f.read().split('/')[1])
     bot.add_cog(COM(bot))
     bot.run(token)
 
