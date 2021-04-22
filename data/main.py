@@ -3,13 +3,17 @@ import requests
 from discord.ext import commands
 import youtube_dl
 import os
-
 from discord.utils import get
+from data.__all_models import *
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'False'}
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+COMMAND_LIST = ['kick', 'ban', 'help', 'join', 'stop', 'play', 'resume', 'leave', 'pause', 'Hi', 'clear']
 
 bot = commands.Bot(command_prefix='.')
+bot.remove_command('help')
+with db:
+    db.create_tables([Member])
 
 
 class COM(commands.Cog):
@@ -26,6 +30,14 @@ class COM(commands.Cog):
     @commands.command(name='Hi')
     async def Hi(self, ctx):
         await ctx.send('Hi')
+
+    @commands.command()
+    async def help(self, ctx):
+        em = discord.Embed(title='Help')
+        em.add_field(name='Moderation', value='Kick, Ban, Clear')
+        em.add_field(name='Play Music', value='Play, Stop, Pause, Resume, Join')
+
+        await ctx.send(embed=em)
 
     @commands.command(name='clear')  # очистка чата(готово)
     async def clear(self, ctx, amount=20):
@@ -63,6 +75,8 @@ class COM(commands.Cog):
             if channel:
                 self.vc = await channel.connect()
         except Exception:
+            await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
+            f'{ctx.message.author.mention}, Вы уже в голосовом чате'))
             return
 
     @commands.command()
@@ -75,6 +89,8 @@ class COM(commands.Cog):
             else:
                 await ctx.send("Currently no audio is playing.")
         except Exception:
+            await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'))
             return
 
     @commands.command()
@@ -83,6 +99,8 @@ class COM(commands.Cog):
         try:
             self.vc.resume()
         except Exception:
+            await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'))
             return
 
     async def youtube(self, ctx, *, search):  # поиск видео на youtube(готово)
@@ -115,7 +133,7 @@ class COM(commands.Cog):
             await ctx.send(embed=discord.Embed(title='ERROR', description="ERROR: Music playing", color=0x969696))
             return
 
-        await ctx.send(embed=discord.Embed(description="Getting everything ready now", color=0x969696))
+        await ctx.send(embed=discord.Embed(description="Please Wait", color=0x969696))
 
         voice = get(bot.voice_clients, guild=ctx.guild)
 
@@ -149,6 +167,7 @@ class COM(commands.Cog):
         try:
             self.vc.stop()
         except Exception:
+            await ctx.channel.send('Музыка не играет')
             return
 
     @commands.command()
@@ -158,31 +177,59 @@ class COM(commands.Cog):
             server = ctx.message.guild.voice_client
             await server.disconnect()
         except Exception:
+            await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'))
             return
 
 
 @bot.event
 async def on_ready():
+    print(f'{bot.user} подключен к Discord!')
+    for guild in bot.guilds:
+        print(
+            f'{bot.user} подключились к чату:\n'
+            f'{guild.name}(id: {guild.id})'
+        )
     await bot.change_presence(status=discord.Status.online,
                               activity=discord.Game(name='Real Life', type=3))  # статус в Discord
 
 
 @bot.event
 async def on_member_join(member):
-    channel = bot.get_channel(832632474017464340)
-    await channel.send(emb=discord.Embed(description=f'Пользователь {member.name}, присоединился к нам!'))
+    await member.create_dm()
+    await member.dm_channel.send(
+        f'Привет, {member.name}!'
+    )
+    role = discord.utils.get(member.guild.roles, id=834000820295041024)
+    await member.add_roles(role)
 
 
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
     txt = message.content.lower()
+    if message.author == bot.user:
+        return
     if 'привет' in txt:
         await message.channel.send('Ку')
+        return
+    with db:
+        try:
+            user = Member.select().where(Member.name == message.author)[0]
+            n = user.lvl
+            if int((n * 10) % 10) == 0:
+                await message.channel.send(embed=discord.Embed(title='Достижение',
+                                                               description=f'{message.author.mention}'
+                                                                           f' достиг {int(n)} уровня'))
+            user.delete_instance()
+            Member.create(name=message.author, lvl=round(n + 0.1, 1))
+        except Exception:
+            Member.create(name=message.author, lvl=0.1)
 
 
 def main():
-    token = 'ODMwNzQ3MTY0MDY1NTI5ODg2.YHLLlg.EfK7NNTzRuo0dKg5Ey36Hbh4w8g'
+    with open('Token.txt', 'rt') as f:
+        token = f.read()
     bot.add_cog(COM(bot))
     bot.run(token)
 
