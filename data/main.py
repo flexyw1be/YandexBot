@@ -20,7 +20,6 @@ class COM(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.song_data = []
 
     @commands.command(name='work')  # команда для отладки(готово)
     @commands.has_permissions(administrator=True)
@@ -33,9 +32,10 @@ class COM(commands.Cog):
 
     @commands.command()
     async def help(self, ctx):
-        em = discord.Embed(title='Help')
-        em.add_field(name='Moderation', value='Kick, Ban, Clear')
-        em.add_field(name='Play Music', value='Play, Stop, Pause, Resume, Join')
+        em = discord.Embed(title='Help', description="About commands", color=15158332)
+        em.add_field(name='Moderation:', value='Kick, Ban, Clear')
+        em.add_field(name='Play Music:', value='Play, Stop, Pause, Resume, Join')
+        em.add_field(name='Level:', value='lvl')
 
         await ctx.send(embed=em)
 
@@ -51,7 +51,7 @@ class COM(commands.Cog):
             await user.kick(reason=reason)
             await ctx.send(embed=discord.Embed(title='Исключение', description=f"""Кикнут: {user.mention} \n
                 Кикнулл: {ctx.author.mention} \n
-                Причина: {reason}""", color=0x969696))
+                Причина: {reason}""", color=15158332))
         except Exception:
             return
 
@@ -63,7 +63,7 @@ class COM(commands.Cog):
             await user.ban(reason=reason)
             await ctx.send(embed=discord.Embed(title='Бан', description=f"""Забанен: {user.mention} \n
                 Забанил: {ctx.author.mention} \n
-                Причина: {reason}""", color=0x969696))
+                Причина: {reason}""", color=15158332))
         except Exception:
             return
 
@@ -76,7 +76,7 @@ class COM(commands.Cog):
                 self.vc = await channel.connect()
         except Exception:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Вы уже в голосовом чате'))
+            f'{ctx.message.author.mention}, Вы не в голосовом чате', color=15158332))
             return
 
     @commands.command()
@@ -85,12 +85,12 @@ class COM(commands.Cog):
         try:
             if self.vc.is_playing:
                 self.vc.pause()
-                await ctx.send(embed=discord.Embed(title='Pause', description=f'write <<.resume>>', color=0x969696))
+                await ctx.send(embed=discord.Embed(title='Pause', description=f'write <<.resume>>', color=15158332))
             else:
                 await ctx.send("Currently no audio is playing.")
         except Exception:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'))
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате', color=15158332))
             return
 
     @commands.command()
@@ -100,7 +100,7 @@ class COM(commands.Cog):
             self.vc.resume()
         except Exception:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'))
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате', color=15158332))
             return
 
     async def youtube(self, ctx, *, search):  # поиск видео на youtube(готово)
@@ -130,10 +130,10 @@ class COM(commands.Cog):
                 print("Removed old song file")
         except PermissionError:
             print("Trying to delete song file, but it's being played")
-            await ctx.send(embed=discord.Embed(title='ERROR', description="ERROR: Music playing", color=0x969696))
+            await ctx.send(embed=discord.Embed(title='ERROR', description="ERROR: Music playing", color=15158332))
             return
 
-        await ctx.send(embed=discord.Embed(description="Please Wait", color=0x969696))
+        await ctx.send(embed=discord.Embed(description="Please Wait", color=15158332))
 
         voice = get(bot.voice_clients, guild=ctx.guild)
 
@@ -158,7 +158,7 @@ class COM(commands.Cog):
         sound = discord.FFmpegPCMAudio('song.mp3')
         voice.play(sound)
         await ctx.channel.purge(limit=2)
-        await ctx.send(embed=discord.Embed(title='Music', description=f'Now playing: {name}', color=0x969696))
+        await ctx.send(embed=discord.Embed(title='Music', description=f'Now playing: {name}', color=15158332))
         await ctx.send(url)
 
     @commands.command()
@@ -178,8 +178,16 @@ class COM(commands.Cog):
             await server.disconnect()
         except Exception:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'))
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате'), color=15158332)
             return
+
+    @commands.command()
+    async def lvl(self, ctx):
+        user = Member.select().where(Member.name == ctx.message.author)[0]
+        await ctx.channel.send(embed=discord.Embed(title='Об уровнях',
+                                                   description=f"""За каждое сообщение на сервере вы повышаете свой личный уровень. 
+При достижение 12 уровня вам выдастся роль Старейшины и станут доступны различные привелегии. 
+Ваш текущий уровень: {int(user.lvl)}""", color=15158332))
 
 
 @bot.event
@@ -220,10 +228,21 @@ async def on_message(message):
             if int((n * 10) % 10) == 0:
                 await message.channel.send(embed=discord.Embed(title='Достижение',
                                                                description=f'{message.author.mention}'
-                                                                           f' достиг {int(n)} уровня'))
+                                                                           f' достиг {int(n)} уровня', color=15158332))
+            role = user.role
             user.delete_instance()
-            Member.create(name=message.author, lvl=round(n + 0.1, 1))
-        except Exception:
+            if n >= 10 and not user.role:
+                member = await message.guild.fetch_member(message.author.id)
+                role = discord.utils.get(member.guild.roles, id=834771283404390451)
+                await member.add_roles(role)
+                await message.channel.send(embed=discord.Embed(title='Поздравляем',
+                                                               description=f'{message.author.mention}'
+                                                                           f' заработал {int(n)} уровень и получает роль Старейшины',
+                                           color=15158332))
+                role = 'Старейшина'
+            Member.create(name=message.author, lvl=round(n + 0.1, 1), role=role)
+        except Exception as e:
+            print(e)
             Member.create(name=message.author, lvl=0.1)
 
 
