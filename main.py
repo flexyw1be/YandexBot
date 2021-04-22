@@ -244,7 +244,7 @@ async def on_message(message):
             Member.create(name=message.author, lvl=round(n + 0.1, 1), role=role)
         except Exception as e:
             print(e)
-            Member.create(name=message.author, lvl=0.1, role='')
+            Member.create(name=message.author, lvl=0.1)
 
 
 def main():
