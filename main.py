@@ -125,8 +125,6 @@ class COM(commands.Cog):
         req = req.json()
         url = f"https://www.youtube.com/watch?v={req['items'][0]['id']['videoId']}"
         song_there = os.path.isfile("song.mp3")
-        if self.vc.is_playing:
-            await ctx.send(embed=discord.Embed(title='ERROR', description="ERROR: Music playing", color=15158332))
         try:
             if song_there:
                 os.remove("song.mp3")
