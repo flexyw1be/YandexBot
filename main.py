@@ -73,11 +73,16 @@ class COM(commands.Cog):
         await ctx.channel.purge(limit=1)
         try:
             channel = ctx.message.author.voice.channel
-            self.vc = await channel.connect()
+            if channel:
+                self.vc = await channel.connect()
+            else:
+                await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
+                f'{ctx.message.author.mention}, Вы не в голосовом чате', color=15158332))
+                return
         except Exception as e:
             print(e)
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Вы не в голосовом чате', color=15158332))
+            f'{ctx.message.author.mention}, Бот уже в голосовом чате', color=15158332))
             return
 
     @commands.command()
@@ -173,12 +178,13 @@ class COM(commands.Cog):
     @commands.command()
     async def leave(self, ctx):  # отсоединение от войс чата(готово)
         await ctx.channel.purge(limit=1)
+        await self.stop(ctx)
         try:
             server = ctx.message.guild.voice_client
             await server.disconnect()
         except Exception:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате', color=15158332))
+            f'{ctx.message.author.mention}, Бот не находиться в голосовом канале', color=15158332))
             return
 
     @commands.command()
