@@ -72,18 +72,22 @@ class COM(commands.Cog):
     async def join(self, ctx):  # прсоединение к войс чату(готово)
         await ctx.channel.purge(limit=1)
         try:
-            channel = ctx.message.author.voice.channel
-            if channel:
-                self.vc = await channel.connect()
-            else:
+            if self.vc:
                 await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-                f'{ctx.message.author.mention}, Вы не в голосовом чате', color=15158332))
+                f'{ctx.message.author.mention}, Бот уже находится в голосовом чате', color=15158332))
                 return
+            channel = ctx.message.author.voice.channel
+            self.vc = await channel.connect()
         except Exception as e:
             print(e)
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Бот уже в голосовом чате', color=15158332))
+            f'{ctx.message.author.mention}, Вы не находитесь в голосовм чате', color=15158332))
             return
+
+    @commands.command()
+    async def print(self, ctx, title, des):
+        await ctx.channel.send(embed=discord.Embed(title=title, description=des, color=15158332))
+        return
 
     @commands.command()
     async def pause(self, ctx):  # пауза войс чата(готово)
@@ -244,7 +248,7 @@ async def on_message(message):
                 await message.channel.send(embed=discord.Embed(title='Поздравляем',
                                                                description=f'{message.author.mention}'
                                                                            f' заработал {int(n)} уровень и получает роль Старейшины',
-                                           color=15158332))
+                                                               color=15158332))
                 role = 'Старейшина'
             Member.create(name=message.author, lvl=round(n + 0.1, 1), role=role)
         except Exception as e:
