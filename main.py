@@ -144,7 +144,7 @@ class COM(commands.Cog):
             if song_there:
                 os.remove("song.mp3")
                 print("Removed old song file")
-        except PermissionError:
+        except discord.errors.ClientException:
             print("Trying to delete song file, but it's being played")
             await ctx.send(embed=discord.Embed(title='ERROR', description="ERROR: Music playing", color=15158332))
             return
