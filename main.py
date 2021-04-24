@@ -73,16 +73,18 @@ class COM(commands.Cog):
     async def join(self, ctx):  # прсоединение к войс чату(готово)
         await ctx.channel.purge(limit=1)
         try:
-            if self.vc:
-                await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-                f'{ctx.message.author.mention}, Бот уже находится в голосовом чате', color=15158332))
-                return
+            self.vc = ''
             channel = ctx.message.author.voice.channel
             self.vc = await channel.connect()
-        except Exception as e:
-            print(e)
+        except discord.errors.ClientException:
+
+            await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
+            f'{ctx.message.author.mention}, Бот уже находится в голосовом чате', color=15158332))
+            return
+        except AttributeError:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
             f'{ctx.message.author.mention}, Вы не находитесь в голосовм чате', color=15158332))
+            self.vc = ''
             return
 
     @commands.command()
@@ -99,7 +101,9 @@ class COM(commands.Cog):
                 await ctx.send(embed=discord.Embed(title='Pause', description=f'write <<.resume>>', color=15158332))
             else:
                 await ctx.send("Currently no audio is playing.")
-        except Exception:
+
+        except AttributeError as e:
+            print(e)
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
             f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате', color=15158332))
             return
@@ -109,7 +113,8 @@ class COM(commands.Cog):
         await ctx.channel.purge(limit=1)
         try:
             self.vc.resume()
-        except Exception:
+        except AttributeError as e:
+            print(e)
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
             f'{ctx.message.author.mention}, Вы не находитесь в голосовом чате', color=15158332))
             return
@@ -177,7 +182,6 @@ class COM(commands.Cog):
         try:
             self.vc.stop()
         except Exception:
-            await ctx.channel.send('Музыка не играет')
             return
 
     @commands.command()
@@ -187,9 +191,10 @@ class COM(commands.Cog):
         try:
             server = ctx.message.guild.voice_client
             await server.disconnect()
-        except Exception:
+        except AttributeError:
             await ctx.channel.send(embed=discord.Embed(title='ERROR', description=
-            f'{ctx.message.author.mention}, Бот не находиться в голосовом канале', color=15158332))
+            f'{ctx.message.author.mention}, Бот не находится в голосовом чате', color=15158332))
+            self.vc = ''
             return
 
     @commands.command()
@@ -197,8 +202,8 @@ class COM(commands.Cog):
         user = Member.select().where(Member.name == ctx.message.author)[0]
         await ctx.channel.send(embed=discord.Embed(title='Об уровнях',
                                                    description=f"""За каждое сообщение на сервере вы повышаете свой личный уровень. 
-При достижение 12 уровня вам выдастся роль Старейшины и станут доступны различные привелегии. 
-Ваш текущий уровень: {int(user.lvl)}""", color=15158332))
+    При достижение 12 уровня вам выдастся роль Старейшины и станут доступны различные привелегии. 
+    Ваш текущий уровень: {int(user.lvl)}""", color=15158332))
 
 
 @bot.event
