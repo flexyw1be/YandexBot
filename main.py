@@ -21,6 +21,7 @@ class COM(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.vc = ''
 
     @commands.command(name='work')  # команда для отладки(готово)
     @commands.has_permissions(administrator=True)
