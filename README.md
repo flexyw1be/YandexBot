@@ -1,5 +1,5 @@
 <h2 align="center">
-  Music discord bot. My project at Yandex Lyceum 
+  Music discord bot
 </h2>
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
