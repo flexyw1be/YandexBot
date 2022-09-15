@@ -1,6 +1,6 @@
-<h2 align="center">
-  Music discord bot
-</h2>
+<h1 align="center">
+  discord music bot
+</h1>
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
